@@ -21,8 +21,14 @@
 # To create a snapshot before an apt-get upgrade:
 # Place the following in /etc/apt/apt.conf.d/00glancesnapshot
 # DPKG::Pre-Invoke {"/bin/bash /usr/local/bin/glance-image-create.sh";};
-
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+
+# Get the script path
+SCRIPT=$(readlink -f $0)
+SCRIPTPATH=`dirname $SCRIPT`
+
+# dry-run
+DO_IT="${3}"
 
 # First we check if all the commands we need are installed.
 command_exists() {
@@ -44,6 +50,10 @@ if [[ ! -f "/root/.openstack_snapshotrc" ]]; then
 else
   source "/root/.openstack_snapshotrc"
 fi
+
+# Export the emails from & to
+EMAIL_FROM="$LOG_EMAIL_FROM"
+EMAIL_TO="$LOG_EMAIL_TO"
 
 # backup_type
 BACKUP_TYPE="${1}"
@@ -69,17 +79,18 @@ launch_instances_backups () {
       # instance name
       INSTANCE_NAME="${arrInstance[2]:1:${#arrInstance[2]}-1}"
 
-      #echo "name::${INSTANCE_NAME}///uuid::${INSTANCE_UUID}"
-
       # snapshot names will sort by date, instance_name and UUID.
       SNAPSHOT_NAME="snapshot-$(date "+%Y%m%d%H%M")-${BACKUP_TYPE}-${INSTANCE_NAME}"
 
       echo "INFO: Start OpenStack snapshot creation : ${INSTANCE_NAME}"
 
-      nova backup "${INSTANCE_UUID}" "${SNAPSHOT_NAME}" "${BACKUP_TYPE}" "${ROTATION}"
+      if [ "$DO_IT" = true ] ; then
+        nova backup "${INSTANCE_UUID}" "${SNAPSHOT_NAME}" "${BACKUP_TYPE}" "${ROTATION}" 2> tmp_error.log
+      else
+        echo "DRY_RUN is enabled. In real a backup of the instance called ${SNAPSHOT_NAME} would've been done. Add a third true arg to disable the dry run then do it !"
+      fi
       if [[ "$?" != 0 ]]; then
-        echo -e "ERROR: nova image-create "${INSTANCE_UUID}" "${SNAPSHOT_NAME}" "${BACKUP_TYPE}" "${ROTATION}" failed. \n \n $(cat /root/nova_errors.log)" | mail -s "Snapshot error - Instance "${INSTANCE_NAME}"" -aFrom:Backup\<backup@nexenture.fr\> "backup@nexenture.fr"
-        exit 1
+        cat tmp_error.log >> nova_errors.log
       else
         echo "SUCCESS: Backup image created and pending upload."
       fi
@@ -105,25 +116,37 @@ launch_volumes_backups () {
       # Get the volume name
       VOLUME_NAME="${arrVolume[2]:1:${#arrVolume[2]}-1}"
 
-      #echo "name::${VOLUME_NAME}///uuid::${VOLUME_UUID}"
-
       # snapshot names will sort by date, instance_name and UUID.
       SNAPSHOT_NAME="snapshot-$(date "+%Y%m%d%H%M")-${BACKUP_TYPE}-${VOLUME_NAME}"
 
       echo "INFO: Start OpenStack snapshot creation : ${VOLUME_NAME}"
-
-      nova volume-snapshot-create "${VOLUME_UUID}" --display-name "${SNAPSHOT_NAME}" --force True
+      if [ "$DO_IT" = true ] ; then
+        nova volume-snapshot-create "${VOLUME_UUID}" --display-name "${SNAPSHOT_NAME}" --force True 2> tmp_error.log
+      else
+        echo "DRY_RUN is enabled. In real a backup of the volume called ${SNAPSHOT_NAME} would've been done. Add a third true arg to disable the dry run then do it !"
+      fi
       if [[ "$?" != 0 ]]; then
-        echo -e "ERROR: nova volume-snapshot-create "${VOLUME_UUID}" --display-name "${SNAPSHOT_NAME}" --force True failed \n \n $(cat /root/nova_errors.log)" | mail -s "Snapshot error - Volume \"DATA ${VOLUME_NAME}\"" -aFrom:Backup\<backup@nexenture.fr\> "backup@nexenture.fr"
-        exit 1
+        cat tmp_error.log >> nova_errors.log
       else
         echo "SUCCESS: Backup volume created and pending upload."
       fi
+
     done
   else
     echo "NO VOLUME FOUND"
   fi
 }
 
+send_errors_if_there_are () {
+  if [ -f nova_errors.log ]; then
+    echo -e "ERRORS:\n\n$(cat nova_errors.log)" | mail -s "Snapshot errors" -aFrom:Backup\<$EMAIL_FROM\> "$EMAIL_TO"
+  fi
+}
+
+if [ -f nova_errors.log ]; then
+  rm nova_errors.log
+fi
 launch_instances_backups
 launch_volumes_backups
+send_errors_if_there_are
+$SCRIPTPATH/count_volume_snapshots.sh

@@ -41,6 +41,8 @@ export OS_TENANT_ID="PROJECT_UUID"
 export OS_USERNAME="USERNAME"
 export OS_PASSWORD="PASSWORD"
 export OS_REGION_NAME="REGION"
+export LOG_EMAIL_FROM="FROM"
+export LOG_EMAIL_TO="TO"
 ```
 Please note that the last line `OS_REGION_NAME` is needed for **OVH Cloud**
 
@@ -61,6 +63,8 @@ chmod +x /home/user/count_volume_snapshots.sh
 ```
 
 ### Try it with the dry run !
+By default the dry run mode is enable. You need to add a third `true` argument to disable it and do it in real :
+
 ```
-/home/user/create_snapshot.sh daily 7 DRY_RUN=true
+/home/user/create_snapshot.sh daily 7 true
 ```
