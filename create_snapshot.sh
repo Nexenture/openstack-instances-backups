@@ -151,4 +151,4 @@ fi
 launch_instances_backups
 launch_volumes_backups
 send_errors_if_there_are
-$SCRIPTPATH/count_volume_snapshots.sh
+$SCRIPTPATH/count_volume_snapshots.sh $ROTATION
