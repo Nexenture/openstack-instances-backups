@@ -28,7 +28,7 @@ SCRIPT=$(readlink -f $0)
 SCRIPTPATH=`dirname $SCRIPT`
 
 # dry-run
-DO_IT="${3}"
+DRY_RUN="${3}"
 
 # First we check if all the commands we need are installed.
 command_exists() {
@@ -84,12 +84,11 @@ launch_instances_backups () {
 
       echo "INFO: Start OpenStack snapshot creation : ${INSTANCE_NAME}"
 
-      if [ "$DO_IT" = true ] ; then
-        nova backup "${INSTANCE_UUID}" "${SNAPSHOT_NAME}" "${BACKUP_TYPE}" "${ROTATION}" 2> tmp_error.log
-      else
+      if [ "$DRY_RUN" = true ] ; then
         echo "DRY-RUN is enabled. In real a backup of the instance called ${SNAPSHOT_NAME} would've been done like that :
-        nova backup ${INSTANCE_UUID} ${SNAPSHOT_NAME} ${BACKUP_TYPE} ${ROTATION}
-        Add a third true arg to disable the dry run then do it !"
+        nova backup ${INSTANCE_UUID} ${SNAPSHOT_NAME} ${BACKUP_TYPE} ${ROTATION}"
+      else
+        nova backup "${INSTANCE_UUID}" "${SNAPSHOT_NAME}" "${BACKUP_TYPE}" "${ROTATION}" 2> tmp_error.log
       fi
       if [[ "$?" != 0 ]]; then
         cat tmp_error.log >> nova_errors.log
@@ -122,12 +121,11 @@ launch_volumes_backups () {
       SNAPSHOT_NAME="snapshot-$(date "+%Y%m%d%H%M")-${BACKUP_TYPE}-${VOLUME_NAME}"
 
       echo "INFO: Start OpenStack snapshot creation : ${VOLUME_NAME}"
-      if [ "$DO_IT" = true ] ; then
-        nova volume-snapshot-create "${VOLUME_UUID}" --display-name "${SNAPSHOT_NAME}" --force True 2> tmp_error.log
-      else
+      if [ "$DRY_RUN" = true ] ; then
         echo "DRY-RUN is enabled. In real a backup of the volume called ${SNAPSHOT_NAME} would've been done like that :
-        nova volume-snapshot-create ${VOLUME_UUID} --display-name ${SNAPSHOT_NAME} --force True
-        Add a third true arg to disable the dry run then do it !"
+        nova volume-snapshot-create ${VOLUME_UUID} --display-name ${SNAPSHOT_NAME} --force True"
+      else
+        nova volume-snapshot-create "${VOLUME_UUID}" --display-name "${SNAPSHOT_NAME}" --force True 2> tmp_error.log
       fi
       if [[ "$?" != 0 ]]; then
         cat tmp_error.log >> nova_errors.log
