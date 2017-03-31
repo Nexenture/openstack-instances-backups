@@ -29,7 +29,7 @@ if output=$(nova volume-snapshot-list | awk -F'|' '/\|/ && !/ID/{system("echo "$
     ARRAY[count__${VOLUME_UUID:0:8}]+="${SNAPSHOT_UUID}"
   done
 
-  # Get the counts and if some volumes get more than X backups we've to remove the older one
+  # Get the counts and if some volumes get more than `rotation` backups we've to remove the older one
   for K in "${!ARRAY[@]}"; do
   	STRINGLENGTH=${#ARRAY[$K][@]}
   	LENGTH="$((STRINGLENGTH/36))"
