@@ -56,6 +56,13 @@ source /root/.openstack_snapshotrc
 
 For example in your /home/user/ directory you can paste the `create_snapshot.sh` & `count_volume_snapshots.sh`
 
+or use the following commands:
+
+```
+wget -q -O - https://raw.githubusercontent.com/Nexenture/openstack-instances-backups/master/create_snapshot.sh > create_snapshot.sh
+wget -q -O - https://raw.githubusercontent.com/Nexenture/openstack-instances-backups/master/count_volume_snapshots.sh > count_volume_snapshots.sh
+```
+
 Then you need to set the executable permission on the files :
 ```
 chmod +x /home/user/create_snapshot.sh
