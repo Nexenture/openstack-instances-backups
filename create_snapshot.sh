@@ -87,7 +87,9 @@ launch_instances_backups () {
       if [ "$DO_IT" = true ] ; then
         nova backup "${INSTANCE_UUID}" "${SNAPSHOT_NAME}" "${BACKUP_TYPE}" "${ROTATION}" 2> tmp_error.log
       else
-        echo "DRY_RUN is enabled. In real a backup of the instance called ${SNAPSHOT_NAME} would've been done. Add a third true arg to disable the dry run then do it !"
+        echo "DRY-RUN is enabled. In real a backup of the instance called ${SNAPSHOT_NAME} would've been done like that :
+        nova backup ${INSTANCE_UUID} ${SNAPSHOT_NAME} ${BACKUP_TYPE} ${ROTATION}
+        Add a third true arg to disable the dry run then do it !"
       fi
       if [[ "$?" != 0 ]]; then
         cat tmp_error.log >> nova_errors.log
@@ -123,7 +125,9 @@ launch_volumes_backups () {
       if [ "$DO_IT" = true ] ; then
         nova volume-snapshot-create "${VOLUME_UUID}" --display-name "${SNAPSHOT_NAME}" --force True 2> tmp_error.log
       else
-        echo "DRY_RUN is enabled. In real a backup of the volume called ${SNAPSHOT_NAME} would've been done. Add a third true arg to disable the dry run then do it !"
+        echo "DRY-RUN is enabled. In real a backup of the volume called ${SNAPSHOT_NAME} would've been done like that :
+        nova volume-snapshot-create ${VOLUME_UUID} --display-name ${SNAPSHOT_NAME} --force True
+        Add a third true arg to disable the dry run then do it !"
       fi
       if [[ "$?" != 0 ]]; then
         cat tmp_error.log >> nova_errors.log
