@@ -84,7 +84,7 @@ launch_instances_backups () {
 
       echo "INFO: Start OpenStack snapshot creation : ${INSTANCE_NAME}"
 
-      if [ "$DRY_RUN" = true ] ; then
+      if [ "$DRY_RUN" = "--dry-run" ] ; then
         echo "DRY-RUN is enabled. In real a backup of the instance called ${SNAPSHOT_NAME} would've been done like that :
         nova backup ${INSTANCE_UUID} ${SNAPSHOT_NAME} ${BACKUP_TYPE} ${ROTATION}"
       else
@@ -121,7 +121,7 @@ launch_volumes_backups () {
       SNAPSHOT_NAME="snapshot-$(date "+%Y%m%d%H%M")-${BACKUP_TYPE}-${VOLUME_NAME}"
 
       echo "INFO: Start OpenStack snapshot creation : ${VOLUME_NAME}"
-      if [ "$DRY_RUN" = true ] ; then
+      if [ "$DRY_RUN" = "--dry-run" ] ; then
         echo "DRY-RUN is enabled. In real a backup of the volume called ${SNAPSHOT_NAME} would've been done like that :
         nova volume-snapshot-create ${VOLUME_UUID} --display-name ${SNAPSHOT_NAME} --force True"
       else
