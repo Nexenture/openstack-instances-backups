@@ -70,11 +70,11 @@ chmod +x /home/user/count_volume_snapshots.sh
 ```
 
 ### Try it with the dry run !
-By default the dry run mode is disable. You need to add a third `true` argument to enable it and test the command :
+By default the dry run mode is disable. You need to add a third `--dry-run` argument to enable it and test the command :
 
 ```
 # dry run mode
-/home/user/create_snapshot.sh daily 7 true
+/home/user/create_snapshot.sh daily 7 --dry-run
 
 # do it mode
 /home/user/create_snapshot.sh daily 7
