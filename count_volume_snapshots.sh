@@ -1,4 +1,5 @@
 #!/bin/bash
+ROTATION="${1}"
 declare -A ARRAY
 
 if output=$(nova volume-list | awk -F'|' '/\|/ && !/ID/{system("echo "$2"")}'); then
@@ -8,7 +9,6 @@ if output=$(nova volume-list | awk -F'|' '/\|/ && !/ID/{system("echo "$2"")}'); 
     declare -A ARRAY["count__${volume:0:8}"]
   done
 
-  #for K in "${!ARRAY[@]}"; do echo $K --- ${ARRAY[$K]}; done
 else
   echo "NO INSTANCE FOUND"
 fi
@@ -29,13 +29,13 @@ if output=$(nova volume-snapshot-list | awk -F'|' '/\|/ && !/ID/{system("echo "$
     ARRAY[count__${VOLUME_UUID:0:8}]+="${SNAPSHOT_UUID}"
   done
 
-  # Get the counts and if some volumes get more than 15 backups we've to remove the older one
+  # Get the counts and if some volumes get more than `rotation` backups we've to remove the older one
   for K in "${!ARRAY[@]}"; do
   	STRINGLENGTH=${#ARRAY[$K][@]}
   	LENGTH="$((STRINGLENGTH/36))"
 
   	echo "length $K:::${LENGTH}---${ARRAY[$K]}"
-  	if [ "${LENGTH}" -gt 15 ]; then
+  	if [ "${LENGTH}" -gt "${ROTATION}" ]; then
   		echo "$K has to remove its older backup :: ${ARRAY[$K]:0:36}"
   		nova volume-snapshot-delete "${ARRAY[$K]:0:36}"
   	fi

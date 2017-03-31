@@ -69,6 +69,10 @@ chmod +x /home/user/create_snapshot.sh
 chmod +x /home/user/count_volume_snapshots.sh
 ```
 
+### Rotations configuration
+About the rotations, the second parameter gonna program it.
+For the volumes the `nova backup` command already has a native parameter, but for the instances the `count_volume_snapshots.sh` bash script is going to do the work !
+
 ### Try it with the dry run !
 By default the dry run mode is disable. You need to add a third `--dry-run` argument to enable it and test the command :
 
