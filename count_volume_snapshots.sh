@@ -35,7 +35,7 @@ if output=$(nova volume-snapshot-list | awk -F'|' '/\|/ && !/ID/{system("echo "$
   	LENGTH="$((STRINGLENGTH/36))"
 
   	echo "length $K:::${LENGTH}---${ARRAY[$K]}"
-  	if [ "${LENGTH}" -gt 3 ]; then
+  	if [ "${LENGTH}" -gt 15 ]; then
   		echo "$K has to remove its older backup :: ${ARRAY[$K]:0:36}"
   		nova volume-snapshot-delete "${ARRAY[$K]:0:36}"
   	fi
