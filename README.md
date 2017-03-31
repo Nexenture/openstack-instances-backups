@@ -12,13 +12,13 @@ https://raymii.org/s/tutorials/OpenStack_Quick_and_automatic_instance_snapshot_b
 The script requires to have the command line tools dmidecode, wget & python-pip
 
 ```
-# Ubuntu
+# Ubuntu/Debian
 apt-get install dmidecode wget python-pip
 # CentOS
 yum install dmidecode wget python-pip
 ```
 
-Recent Ubuntu releases have the OpenStack command line tools packaged
+Recent Ubuntu/Debian releases have the OpenStack command line tools packaged
 
 ```
 apt-get install python-keystoneclient python-glanceclient python-novaclient
