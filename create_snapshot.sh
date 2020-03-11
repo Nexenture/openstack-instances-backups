@@ -1,31 +1,19 @@
 #!/bin/bash
-# Script to create snapshot of Nova Instance (to glance)
+# Script to create snapshot of openstack Instance
 # Place the computerc file in: /root/.openstack_snapshotrc
 
-# To restore to a new server:
-# nova boot --image "SNAPSHOT_NAME" --poll --flavor "Standard 1" --availability-zone NL1 --nic net-id=00000000-0000-0000-0000-000000000000 --key "SSH_KEY" "VM_NAME"
-# To restore to this server (keep public IP)
-# nova rebuild --poll "INSTANCE_UUID" "SNAPSHOT_IMAGE_UUID"
+# Debian/Ubuntu install
+# apt-get install python3-pip
+# pip3 install python-openstackclient
 
-# OpenStack Command Line tools required:
-# apt-get install python-novaclient
-# apt-get install python-keystoneclient
-# apt-get install python-glanceclient
-
-# Or for older/other distributions:
-# apt-get install python-pip || yum install python-pip
-# pip install python-novaclient
-# pip install python-keystoneclient
-# pip install python-glanceclient
-
-# To create a snapshot before an apt-get upgrade:
-# Place the following in /etc/apt/apt.conf.d/00glancesnapshot
-# DPKG::Pre-Invoke {"/bin/bash /usr/local/bin/glance-image-create.sh";};
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+# If you have any error while launchging openstack command :
+# openstack --debug --help
+# for me the fix was :
+# pip3 install six --upgrade
 
 # Get the script path
-SCRIPT=$(readlink -f $0)
-SCRIPTPATH=`dirname $SCRIPT`
+SCRIPT=$(readlink -f "$0")
+SCRIPTPATH=$(dirname "$SCRIPT")
 
 # dry-run
 DRY_RUN="${3}"
@@ -39,7 +27,7 @@ command_exists() {
   fi
 }
 
-for COMMAND in "nova" "glance" "dmidecode" "tr"; do
+for COMMAND in "openstack" "dmidecode" "tr"; do
   command_exists "${COMMAND}"
 done
 
@@ -65,7 +53,7 @@ fi
 ROTATION="${2}"
 
 launch_instances_backups () {
-  if output=$(nova list --minimal | awk -F'|' '/\|/ && !/ID/{system("echo "$2"__"$3"")}'); then
+  if output=$(openstack server list | awk -F'|' '/\|/ && !/ID/{system("echo "$2"__"$3"")}'); then
     set -- "$output"
     IFS=$'\n'; declare -a arrOutput=($*)
 
@@ -86,12 +74,12 @@ launch_instances_backups () {
 
       if [ "$DRY_RUN" = "--dry-run" ] ; then
         echo "DRY-RUN is enabled. In real a backup of the instance called ${SNAPSHOT_NAME} would've been done like that :
-        nova backup ${INSTANCE_UUID} ${SNAPSHOT_NAME} ${BACKUP_TYPE} ${ROTATION}"
+        openstack server backup create ${INSTANCE_UUID} --name ${SNAPSHOT_NAME} --type ${BACKUP_TYPE} --rotate ${ROTATION}"
       else
-        nova backup "${INSTANCE_UUID}" "${SNAPSHOT_NAME}" "${BACKUP_TYPE}" "${ROTATION}" 2> tmp_error.log
+        openstack server backup create "${INSTANCE_UUID}" --name "${SNAPSHOT_NAME}" --type "${BACKUP_TYPE}" --rotate "${ROTATION}" 2> tmp_error.log
       fi
       if [[ "$?" != 0 ]]; then
-        cat tmp_error.log >> nova_errors.log
+        cat tmp_error.log >> openstack_errors.log
       else
         echo "SUCCESS: Backup image created and pending upload."
       fi
@@ -103,7 +91,7 @@ launch_instances_backups () {
 }
 
 launch_volumes_backups () {
-  if output=$(nova volume-list | awk -F'|' '/\|/ && !/ID/{system("echo "$2"__"$4"")}'); then
+  if output=$(openstack volume list | awk -F'|' '/\|/ && !/ID/{system("echo "$2"__"$3"")}'); then
     set -- "$output"
     IFS=$'\n'; declare -a arrOutput=($*)
 
@@ -122,13 +110,13 @@ launch_volumes_backups () {
 
       echo "INFO: Start OpenStack snapshot creation : ${VOLUME_NAME}"
       if [ "$DRY_RUN" = "--dry-run" ] ; then
-        echo "DRY-RUN is enabled. In real a backup of the volume called ${SNAPSHOT_NAME} would've been done like that :
-        nova volume-snapshot-create ${VOLUME_UUID} --display-name ${SNAPSHOT_NAME} --force True"
+        echo "DRY-RUN is enabled. In real a backup of the volume called ${SNAPSHOT_NAME} would've been done like that :"
+        echo "openstack volume snapshot create --force --volume ${VOLUME_UUID} ${SNAPSHOT_NAME}"
       else
-        nova volume-snapshot-create "${VOLUME_UUID}" --display-name "${SNAPSHOT_NAME}" --force True 2> tmp_error.log
+        openstack volume snapshot create --force --volume "${VOLUME_UUID}" "${SNAPSHOT_NAME}" 2> tmp_error.log
       fi
       if [[ "$?" != 0 ]]; then
-        cat tmp_error.log >> nova_errors.log
+        cat tmp_error.log >> openstack_errors.log
       else
         echo "SUCCESS: Backup volume created and pending upload."
       fi
@@ -140,15 +128,15 @@ launch_volumes_backups () {
 }
 
 send_errors_if_there_are () {
-  if [ -f nova_errors.log ]; then
-    echo -e "ERRORS:\n\n$(cat nova_errors.log)" | mail -s "Snapshot errors" -aFrom:Backup\<$EMAIL_FROM\> "$EMAIL_TO"
+  if [ -f openstack_errors.log ]; then
+    echo -e "ERRORS:\n\n$(cat openstack_errors.log)" | mail -s "Snapshot errors" -aFrom:Backup\<$EMAIL_FROM\> "$EMAIL_TO"
   fi
 }
 
-if [ -f nova_errors.log ]; then
-  rm nova_errors.log
+if [ -f openstack_errors.log ]; then
+  rm openstack_errors.log
 fi
 launch_instances_backups
 launch_volumes_backups
 send_errors_if_there_are
-$SCRIPTPATH/count_volume_snapshots.sh $ROTATION
+bash "$SCRIPTPATH/count_volume_snapshots.sh" "$ROTATION"
