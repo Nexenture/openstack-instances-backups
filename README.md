@@ -13,15 +13,8 @@ The script requires to have the command line tools dmidecode, wget & python-pip
 
 ```
 # Ubuntu/Debian
-apt-get install dmidecode wget python-pip
-# CentOS
-yum install dmidecode wget python-pip
-```
-
-Recent Ubuntu/Debian releases have the OpenStack command line tools packaged
-
-```
-apt-get install python-keystoneclient python-glanceclient python-novaclient
+apt-get install dmidecode wget python-pip3
+pip3 install python-openstackclient
 ```
 
 ### Mail agent
@@ -54,20 +47,9 @@ source /root/.openstack_snapshotrc
 
 ### Install the scripts
 
+git clone this repo then chmod 755 *.sh scripts
+
 For example in your /home/user/ directory you can paste the `create_snapshot.sh` & `count_volume_snapshots.sh`
-
-or use the following commands:
-
-```
-wget -q -O - https://raw.githubusercontent.com/Nexenture/openstack-instances-backups/master/create_snapshot.sh > create_snapshot.sh
-wget -q -O - https://raw.githubusercontent.com/Nexenture/openstack-instances-backups/master/count_volume_snapshots.sh > count_volume_snapshots.sh
-```
-
-Then you need to set the executable permission on the files :
-```
-chmod +x /home/user/create_snapshot.sh
-chmod +x /home/user/count_volume_snapshots.sh
-```
 
 ### Rotations configuration
 About the rotations, the second parameter gonna program it.
