@@ -28,7 +28,7 @@ Firstable you need to create the file :
 ```
 nano /root/.openstack_snapshotrc
 
-export OS_AUTH_URL="https://identity.stack.cloudvps.com/v2.0"
+export OS_AUTH_URL="https://identity.stack.cloudvps.com/v3"
 export OS_TENANT_NAME="PROJECT_UUID"
 export OS_TENANT_ID="PROJECT_UUID"
 export OS_USERNAME="USERNAME"
